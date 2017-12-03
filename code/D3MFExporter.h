@@ -38,24 +38,63 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ----------------------------------------------------------------------
 */
-#include "OpenGEXExporter.h"
+#pragma once
+
+#include <memory>
+#include <sstream>
+#include <vector>
+#include <assimp/vector3.h>
+
+struct aiScene;
+struct aiNode;
+struct aiMaterial;
+struct aiMesh;
+
+struct zip_t;
 
 namespace Assimp {
-namespace OpenGEX {
 
-#ifndef ASSIMP_BUILD_NO_OPENGEX_EXPORTER
+class IOStream;
 
-OpenGEXExporter::OpenGEXExporter() {
-}
+namespace D3MF {
 
-OpenGEXExporter::~OpenGEXExporter() {
-}
+#ifndef ASSIMP_BUILD_NO_EXPORT
+#ifndef ASSIMP_BUILD_NO3MF_EXPORTER
 
-bool OpenGEXExporter::exportScene( const char * /*filename*/, const aiScene* /*pScene*/ ) {
-    return true;
-}
+struct OpcPackageRelationship;
 
-#endif // ASSIMP_BUILD_NO_OPENGEX_EXPORTER
+class D3MFExporter {
+public:
+    D3MFExporter( const char* pFile, const aiScene* pScene );
+    ~D3MFExporter();
+    bool validate();
+    bool exportArchive( const char *file );
+    bool exportRelations();
+    bool export3DModel();
 
-} // Namespace OpenGEX
+protected:
+    void writeHeader();
+    void writeObjects();
+    void writeMesh( aiMesh *mesh );
+    void writeVertex( const aiVector3D &pos );
+    void writeFaces( aiMesh *mesh );
+    void writeBuild();
+    void writeModelToArchive( const std::string &folder, const std::string &modelName );
+    void writeRelInfoToFile( const std::string &folder, const std::string &relName );
+
+private:
+    std::string mArchiveName;
+    zip_t *m_zipArchive;
+    const aiScene *mScene;
+    std::ostringstream mModelOutput;
+    std::ostringstream mRelOutput;
+    std::vector<unsigned int> mBuildItems;
+    std::vector<OpcPackageRelationship*> mRelations;
+};
+
+#endif // ASSIMP_BUILD_NO3MF_EXPORTER
+#endif // ASSIMP_BUILD_NO_EXPORT
+
+} // Namespace D3MF
 } // Namespace Assimp
+
